@@ -4,28 +4,33 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Monte Carlo Insurance Loss Simulator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:        #1a1a2e;
-      --panel:     #16213e;
-      --border:    #2a2a4a;
-      --purple:    #7b52ab;
-      --purple-lt: #c4a8e8;
-      --red:       #e84855;
-      --green:     #2dc653;
-      --yellow:    #f6c90e;
-      --orange:    #f4a261;
-      --text:      #e2e8f0;
-      --muted:     #94a3b8;
-      --dim:       #4a5568;
+      --bg:       #f5f2ed;
+      --surface:  #ffffff;
+      --surface2: #f0ece5;
+      --line:     #e0d9d0;
+      --line2:    #cec6bb;
+      --text:     #1a1714;
+      --body:     #3d3730;
+      --muted:    #8a8278;
+      --dim:      #b8b0a6;
+      --navy:     #1b3a6b;
+      --navy-lt:  #edf1f8;
+      --red:      #c0394a;
+      --green:    #2a8c52;
+      --orange:   #b86a28;
+      --blue:     #2d5f8a;
     }
 
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: system-ui, -apple-system, sans-serif;
+      font-family: 'DM Sans', system-ui, sans-serif;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -33,161 +38,214 @@
 
     /* ── Header ── */
     header {
-      padding: 20px 28px 16px;
-      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      padding: 32px 44px 0;
+      border-bottom: 1px solid var(--line);
     }
-    header .eyebrow {
-      font-size: 10px;
-      letter-spacing: 2px;
-      color: var(--purple);
-      margin-bottom: 4px;
+    .eyebrow {
+      font-size: 9px;
+      letter-spacing: 3.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+      font-weight: 500;
     }
     header h1 {
-      font-size: 22px;
-      font-weight: 700;
+      font-size: 24px;
+      font-weight: 300;
       color: var(--text);
+      letter-spacing: -0.4px;
     }
-    header .subtitle {
-      font-size: 11px;
-      color: var(--dim);
-      margin-top: 3px;
+    header h1 strong {
+      font-weight: 600;
+      color: var(--navy);
     }
 
-    /* ── Main two-column layout ── */
-    .main {
+    /* ── Tabs ── */
+    .tabs {
       display: flex;
-      flex: 1;
+      margin-top: 24px;
+      gap: 0;
     }
+    .tab {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 11px 24px 11px 0;
+      margin-right: 24px;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+      user-select: none;
+      background: none;
+    }
+    .tab:hover { color: var(--body); }
+    .tab.active {
+      color: var(--text);
+      border-bottom-color: var(--navy);
+    }
+
+    /* ── Main layout ── */
+    .main { display: flex; flex: 1; }
 
     /* ── Chart column ── */
     .chart-col {
       flex: 1;
-      padding: 24px 20px 20px 28px;
-      border-right: 1px solid var(--border);
+      padding: 32px 36px 36px 44px;
+      border-right: 1px solid var(--line);
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 24px;
+      background: var(--surface);
     }
     .section-label {
-      font-size: 10px;
-      letter-spacing: 1.5px;
-      color: var(--purple);
+      font-size: 9px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 500;
     }
+
+    /* ── Chart ── */
     #chartCanvas {
       width: 100%;
-      height: 240px;
-      background: var(--panel);
-      border-radius: 8px;
+      height: 200px;
       display: block;
+      border: 1px solid var(--line);
+      border-radius: 2px;
+      background: var(--bg);
     }
+
+    /* ── Legend ── */
     .legend {
       display: flex;
-      gap: 20px;
-      font-size: 10px;
+      gap: 24px;
+      font-size: 9px;
       color: var(--muted);
-      flex-wrap: wrap;
+      letter-spacing: 1px;
+      text-transform: uppercase;
     }
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .legend-line {
-      width: 22px;
-      height: 2px;
-    }
-    .legend-line.normal  { background: var(--yellow); }
-    .legend-line.clt     { background: var(--red);    border-top: 2px dashed var(--red); height: 0; }
-    .legend-line.empiric { background: var(--green);  border-top: 2px dashed var(--green); height: 0; }
+    .legend-item { display: flex; align-items: center; gap: 7px; }
+    .legend-line { width: 16px; height: 1px; }
+    .legend-line.normal  { background: var(--navy); }
+    .legend-line.clt     { border-top: 1px dashed var(--red); }
+    .legend-line.empiric { border-top: 1px dashed var(--green); }
 
-    /* ── KPI cards ── */
+    /* ── KPI grid ── */
     .kpis {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
-      gap: 10px;
+      gap: 1px;
+      background: var(--line);
+      border: 1px solid var(--line);
+      border-radius: 2px;
+      overflow: hidden;
     }
     .kpi {
-      background: var(--panel);
-      border-radius: 8px;
-      padding: 12px 8px;
-      text-align: center;
-      border-top: 2px solid var(--purple);
+      background: var(--surface);
+      padding: 16px 14px;
+      position: relative;
     }
-    .kpi.red    { border-top-color: var(--red); }
-    .kpi.green  { border-top-color: var(--green); }
-    .kpi.yellow { border-top-color: var(--yellow); }
-    .kpi.orange { border-top-color: var(--orange); }
+    .kpi::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 14px; right: 14px;
+      height: 2px;
+      background: var(--line);
+    }
+    .kpi.red::after    { background: var(--red); }
+    .kpi.green::after  { background: var(--green); }
+    .kpi.yellow::after { background: var(--navy); }
+    .kpi.orange::after { background: var(--orange); }
+    .kpi-label {
+      font-size: 8px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+    .kpi-value {
+      font-family: 'DM Mono', monospace;
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--text);
+      letter-spacing: -0.5px;
+    }
+
+    /* ── Pricing ── */
+    .pricing-label {
+      font-size: 8px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--orange);
+      font-weight: 500;
+    }
     .pricing-row {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      padding-top: 4px;
-      border-top: 1px solid var(--border);
-    }
-    .pricing-label {
-      font-size: 9px;
-      letter-spacing: 1.5px;
-      color: var(--orange);
-      margin-bottom: 8px;
-    }
-    .kpi-label {
-      font-size: 9px;
-      letter-spacing: 0.5px;
-      color: var(--muted);
-      margin-bottom: 5px;
-    }
-    .kpi-value {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--text);
+      gap: 1px;
+      background: var(--line);
+      border: 1px solid var(--line);
+      border-radius: 2px;
+      overflow: hidden;
     }
 
     /* ── Controls column ── */
     .controls-col {
-      width: 230px;
+      width: 252px;
       flex-shrink: 0;
-      padding: 24px 18px;
+      padding: 32px 28px;
       display: flex;
       flex-direction: column;
-      gap: 18px;
+      gap: 20px;
+      background: var(--surface2);
+      border-left: 1px solid var(--line);
     }
-    .slider-group {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
+    .slider-group { display: flex; flex-direction: column; gap: 7px; }
     .slider-row {
       display: flex;
       justify-content: space-between;
-      font-size: 10px;
+      align-items: baseline;
     }
-    .slider-row .param-name { color: var(--muted); }
-    .slider-row .param-val  { color: var(--text); font-weight: 600; }
+    .param-name {
+      font-size: 9px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .param-val {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--text);
+      font-weight: 500;
+    }
     input[type=range] {
       -webkit-appearance: none;
       appearance: none;
       width: 100%;
-      height: 4px;
-      background: var(--border);
-      border-radius: 2px;
+      height: 2px;
+      background: var(--line2);
+      border-radius: 1px;
       outline: none;
     }
     input[type=range]::-webkit-slider-thumb {
       -webkit-appearance: none;
-      appearance: none;
-      width: 14px;
-      height: 14px;
+      width: 12px; height: 12px;
       border-radius: 50%;
-      background: var(--purple-lt);
-      border: 2px solid var(--bg);
+      background: var(--navy);
+      border: 2px solid var(--surface);
+      box-shadow: 0 0 0 1px var(--navy);
       cursor: pointer;
     }
     input[type=range]::-moz-range-thumb {
-      width: 14px;
-      height: 14px;
+      width: 12px; height: 12px;
       border-radius: 50%;
-      background: var(--purple-lt);
-      border: 2px solid var(--bg);
+      background: var(--navy);
+      border: 2px solid var(--surface);
       cursor: pointer;
     }
     .slider-bounds {
@@ -197,241 +255,381 @@
       color: var(--dim);
     }
     .confidence-note {
-      background: var(--panel);
-      border-radius: 6px;
-      padding: 8px 12px;
-      font-size: 10px;
-      color: var(--dim);
-    }
-    .confidence-note span { color: var(--yellow); font-weight: 600; }
-    #runBtn {
-      background: linear-gradient(135deg, var(--purple), #533483);
-      color: var(--text);
-      border: none;
-      border-radius: 8px;
-      padding: 14px;
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      cursor: pointer;
-      margin-top: auto;
-      transition: opacity 0.2s;
-    }
-    #runBtn:disabled { opacity: 0.5; cursor: not-allowed; }
-    #runBtn:hover:not(:disabled) { opacity: 0.9; }
-
-    /* ── Theory accordion ── */
-    .theory {
-      border-top: 1px solid var(--border);
-      padding: 16px 28px;
-    }
-    .theory-toggle {
-      font-size: 10px;
-      letter-spacing: 1px;
-      color: var(--purple);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      user-select: none;
-    }
-    .theory-toggle .arrow { transition: transform 0.2s; }
-    .theory-toggle .hint  { margin-left: auto; font-size: 9px; color: var(--dim); }
-    .theory-body {
-      display: none;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 14px;
-      margin-top: 14px;
-    }
-    .theory-body.open { display: grid; }
-    .theory-card {
-      background: var(--panel);
-      border-radius: 8px;
-      padding: 14px;
-      font-size: 10px;
+      background: var(--navy-lt);
+      border: 1px solid #c8d4e8;
+      border-radius: 2px;
+      padding: 9px 12px;
+      font-size: 9px;
       color: var(--muted);
       line-height: 1.7;
     }
+    .confidence-note span {
+      color: var(--navy);
+      font-family: 'DM Mono', monospace;
+      font-weight: 500;
+    }
+    .run-btn {
+      background: var(--text);
+      color: var(--bg);
+      border: none;
+      border-radius: 2px;
+      padding: 14px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      cursor: pointer;
+      margin-top: auto;
+      transition: background 0.15s, opacity 0.15s;
+      width: 100%;
+    }
+    .run-btn:hover:not(:disabled) { background: var(--body); }
+    .run-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    /* ── Theory accordion ── */
+    .theory {
+      background: var(--surface);
+      border-top: 1px solid var(--line);
+      padding: 18px 44px;
+    }
+    .theory-toggle {
+      font-size: 9px;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      user-select: none;
+      font-weight: 500;
+    }
+    .theory-toggle .hint { margin-left: auto; font-size: 8px; color: var(--dim); }
+    .theory-body {
+      display: none;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      margin-top: 16px;
+      background: var(--line);
+      border: 1px solid var(--line);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .theory-body.open { display: grid; }
+    .theory-card {
+      background: var(--bg);
+      padding: 18px 20px;
+      font-size: 10px;
+      color: var(--muted);
+      line-height: 1.9;
+    }
     .theory-card h4 {
-      color: var(--purple-lt);
-      font-size: 11px;
-      margin-bottom: 8px;
+      color: var(--navy);
+      font-size: 8px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      font-weight: 600;
     }
     code {
-      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-family: 'DM Mono', monospace;
       font-size: 10px;
-    }
-
-    /* ── Tabs ── */
-    .tabs {
-      display: flex;
-      gap: 4px;
-      margin-top: 14px;
-    }
-    .tab {
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-      color: var(--muted);
-      padding: 6px 16px;
-      border-radius: 6px 6px 0 0;
-      border: 1px solid transparent;
-      border-bottom: none;
-      cursor: pointer;
-      background: none;
-      transition: color 0.15s, background 0.15s;
-      user-select: none;
-    }
-    .tab:hover { color: var(--text); }
-    .tab.active {
-      color: var(--purple-lt);
-      background: var(--panel);
-      border-color: var(--border);
+      color: var(--body);
     }
 
     /* ── About panel ── */
     .about-panel {
       display: none;
       flex: 1;
-      padding: 36px 48px;
-      max-width: 760px;
+      padding: 48px 44px;
+      max-width: 680px;
+      background: var(--surface);
     }
     .about-panel.visible { display: block; }
     .about-panel h2 {
-      font-size: 18px;
-      font-weight: 700;
+      font-size: 22px;
+      font-weight: 300;
       color: var(--text);
-      margin-bottom: 6px;
+      margin-bottom: 4px;
+      letter-spacing: -0.3px;
     }
     .about-panel .tagline {
-      font-size: 12px;
-      color: var(--purple-lt);
-      margin-bottom: 28px;
-      letter-spacing: 0.3px;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--navy);
+      margin-bottom: 36px;
+      font-weight: 500;
     }
     .about-panel h3 {
-      font-size: 11px;
-      letter-spacing: 1.5px;
-      color: var(--purple);
-      margin-bottom: 10px;
-      margin-top: 24px;
+      font-size: 9px;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+      margin-top: 28px;
+      font-weight: 600;
     }
     .about-panel p {
       font-size: 13px;
-      color: var(--muted);
-      line-height: 1.75;
+      font-weight: 300;
+      color: var(--body);
+      line-height: 1.85;
       margin-bottom: 12px;
     }
-    .about-panel ul {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
+    .about-panel ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
     .about-panel ul li {
       font-size: 13px;
-      color: var(--muted);
-      line-height: 1.6;
-      padding-left: 16px;
+      font-weight: 300;
+      color: var(--body);
+      line-height: 1.7;
+      padding-left: 18px;
       position: relative;
     }
     .about-panel ul li::before {
-      content: '›';
+      content: '—';
       position: absolute;
       left: 0;
-      color: var(--purple-lt);
+      color: var(--dim);
     }
-    .about-panel .pill-row {
+
+    /* ── Triangle panel ── */
+    .triangle-panel { display: none; flex: 1; overflow: hidden; }
+    .triangle-panel.visible { display: flex; }
+    .triangle-col {
+      flex: 1;
+      padding: 32px 36px 36px 44px;
+      border-right: 1px solid var(--line);
+      overflow-y: auto;
+      overflow-x: auto;
       display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 4px;
+      flex-direction: column;
+      gap: 28px;
+      background: var(--surface);
     }
-    .about-panel .pill {
+    .tri-legend {
+      display: flex;
+      gap: 20px;
+      font-size: 9px;
+      color: var(--muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .tri-legend-item { display: flex; align-items: center; gap: 7px; }
+    .tri-dot { width: 8px; height: 8px; border-radius: 1px; flex-shrink: 0; }
+    .tri-dot.known     { background: var(--text); }
+    .tri-dot.diagonal  { background: var(--navy); }
+    .tri-dot.projected { background: var(--line2); border: 1px solid var(--dim); }
+
+    /* Triangle table */
+    .tri-table {
+      border-collapse: collapse;
+      font-size: 11px;
+      min-width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .tri-table th {
+      font-family: 'DM Mono', monospace;
+      font-size: 8px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 11px 16px;
+      text-align: right;
+      border-bottom: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      font-weight: 500;
+      white-space: nowrap;
+      background: var(--bg);
+    }
+    .tri-table th:first-child { text-align: left; }
+    .tri-table td {
+      font-family: 'DM Mono', monospace;
+      padding: 10px 16px;
+      text-align: right;
+      border-bottom: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      font-size: 11px;
+    }
+    .tri-table td:first-child {
+      text-align: left;
+      color: var(--muted);
+      font-size: 9px;
+      letter-spacing: 1px;
+      background: var(--bg);
+    }
+    .tri-table td.known     { color: var(--text); }
+    .tri-table td.diagonal  { color: var(--navy); font-weight: 500; background: var(--navy-lt); }
+    .tri-table td.projected { color: var(--dim); font-style: italic; }
+    .tri-table tr.factors-row td {
+      color: var(--green);
       font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-      color: var(--purple-lt);
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 4px 10px;
+      background: var(--bg);
     }
+    .tri-table tr.factors-row td:first-child { color: var(--muted); }
+
+    /* IBNR table */
+    .ibnr-table {
+      border-collapse: collapse;
+      font-size: 11px;
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .ibnr-table th {
+      font-family: 'DM Mono', monospace;
+      font-size: 8px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 11px 16px;
+      text-align: right;
+      border-bottom: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      font-weight: 500;
+      background: var(--bg);
+    }
+    .ibnr-table th:first-child { text-align: left; }
+    .ibnr-table td {
+      font-family: 'DM Mono', monospace;
+      padding: 10px 16px;
+      text-align: right;
+      border-bottom: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      font-size: 11px;
+    }
+    .ibnr-table td:first-child {
+      text-align: left;
+      color: var(--muted);
+      font-size: 9px;
+      letter-spacing: 1px;
+    }
+    .ibnr-table tr.total-row td { background: var(--navy-lt); }
+    .ibnr-table tr.total-row td:first-child { color: var(--text); font-weight: 600; }
+
+    .tri-select {
+      width: 100%;
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--line2);
+      border-radius: 2px;
+      padding: 9px 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 10px;
+      outline: none;
+      cursor: pointer;
+    }
+    .tri-select:focus { border-color: var(--navy); }
   </style>
 </head>
 <body>
 
   <header>
-    <div class="eyebrow">ACTUARIAL RISK MODELING</div>
-    <h1>Monte Carlo Insurance Loss Simulator</h1>
-    <div class="subtitle">Compound Binomial–Uniform model &nbsp;·&nbsp; browser-native &nbsp;·&nbsp; no server required</div>
+    <div class="eyebrow">Actuarial Risk Modeling · Browser Native · No Server Required</div>
+    <h1>Monte Carlo <strong>Insurance</strong> Loss Simulator</h1>
     <div class="tabs">
-      <div class="tab active" id="tab-sim" onclick="switchTab('sim')">Simulator</div>
-      <div class="tab" id="tab-about" onclick="switchTab('about')">About</div>
+      <div class="tab active" id="tab-sim"      onclick="switchTab('sim')">Simulator</div>
+      <div class="tab"        id="tab-triangle" onclick="switchTab('triangle')">Loss Triangle</div>
+      <div class="tab"        id="tab-about"    onclick="switchTab('about')">About</div>
     </div>
   </header>
 
-  <!-- About panel -->
+  <!-- ── About panel ── -->
   <div class="about-panel" id="aboutPanel">
     <h2>Monte Carlo Insurance Loss Simulator</h2>
-    <div class="tagline">An interactive actuarial modeling tool built entirely in the browser</div>
+    <div class="tagline">Interactive actuarial modeling — compound Binomial–Uniform model</div>
 
-    <h3>OVERVIEW</h3>
-    <p>
-      This tool simulates the aggregate annual losses of an auto insurance portfolio using a
-      compound probability model. You set the portfolio parameters — number of drivers, claim
-      probability, and severity range — and the simulator runs thousands of independent
-      one-year scenarios to estimate the distribution of total losses.
-    </p>
-    <p>
-      The key output is the <strong style="color:var(--text)">solvency reserve</strong>: the amount an insurer must hold
-      to cover losses with 95% confidence. Two methods are compared side by side — a
-      closed-form analytical estimate (via the Central Limit Theorem) and an empirical
-      estimate drawn directly from the simulated distribution.
-    </p>
+    <h3>Overview</h3>
+    <p>This tool simulates the aggregate annual losses of an auto insurance portfolio using a compound probability model. Set portfolio parameters — drivers, claim probability, severity range — and the simulator runs thousands of independent one-year scenarios to estimate the distribution of total losses.</p>
+    <p>The key output is the <strong style="color:var(--text);font-weight:500">solvency reserve</strong>: the amount an insurer must hold to cover losses with 95% confidence. Two methods are compared: a closed-form CLT estimate and an empirical 95th percentile drawn directly from the simulated distribution.</p>
+    <p>The <strong style="color:var(--text);font-weight:500">Loss Triangle</strong> tab implements the chain-ladder method — the standard actuarial technique for estimating IBNR reserves from historical loss development patterns.</p>
 
-    <h3>THE MODEL</h3>
+    <h3>The Model</h3>
     <ul>
-      <li><strong style="color:var(--text)">Claim frequency</strong> — each driver independently files a claim with probability <em>p</em>, so the number of claims follows a Binomial(N, p) distribution.</li>
-      <li><strong style="color:var(--text)">Claim severity</strong> — each individual claim amount is drawn from a Uniform(min, max) distribution, representing a plausible range of loss costs.</li>
-      <li><strong style="color:var(--text)">Aggregate loss</strong> — total portfolio loss S is the sum of all individual claim amounts, a compound random variable whose moments follow from the Law of Total Expectation and Variance.</li>
-      <li><strong style="color:var(--text)">CLT reserve</strong> — for large portfolios the CLT approximates S as Normal(E[S], Var[S]), giving a closed-form 95th-percentile reserve: E[S] + 1.645·Std[S].</li>
+      <li><strong style="color:var(--text);font-weight:500">Claim frequency</strong> — each driver independently files a claim with probability p, so claim count follows Binomial(N, p).</li>
+      <li><strong style="color:var(--text);font-weight:500">Claim severity</strong> — each claim amount is drawn from Uniform(min, max).</li>
+      <li><strong style="color:var(--text);font-weight:500">Aggregate loss</strong> — total portfolio loss S is a compound random variable; moments derived via Law of Total Expectation and Variance.</li>
+      <li><strong style="color:var(--text);font-weight:500">CLT reserve</strong> — for large portfolios CLT approximates S as Normal, giving E[S] + 1.645·Std[S].</li>
     </ul>
 
-    <h3>WHY THIS MATTERS</h3>
-    <p>
-      Actuaries use models like this to set premium rates and statutory reserves. The gap
-      between the CLT reserve and the empirical reserve reveals how well the normal
-      approximation holds — an important check for portfolios with heavy-tailed or
-      skewed severity distributions.
-    </p>
-
-    <h3>PARAMETERS</h3>
+    <h3>Parameters</h3>
     <ul>
-      <li><strong style="color:var(--text)">Drivers (N)</strong> — the total number of policyholders in the portfolio. Larger portfolios produce tighter, more bell-shaped loss distributions as individual randomness averages out.</li>
-      <li><strong style="color:var(--text)">P(claim)</strong> — the annual probability that any single driver files a claim. At 5%, roughly 500 of 10,000 drivers are expected to have a loss in a given year.</li>
-      <li><strong style="color:var(--text)">Min Severity</strong> — the lower bound of the Uniform claim cost distribution. No individual claim is assumed to cost less than this amount.</li>
-      <li><strong style="color:var(--text)">Max Severity</strong> — the upper bound of the Uniform claim cost distribution. Widening the severity range increases aggregate variance and pushes the required reserve higher.</li>
-      <li><strong style="color:var(--text)">Simulations</strong> — the number of independent one-year scenarios generated. More simulations reduce sampling noise in the empirical reserve estimate; 10,000 is sufficient for stable results at most parameter settings.</li>
-      <li><strong style="color:var(--orange)">Premium Loading</strong> — a markup applied on top of expected losses to cover expenses and profit. At 20% loading, an insurer collecting $1.20 for every $1.00 of expected loss targets an 83% loss ratio. Adjusting this slider shows how pricing decisions interact with the reserve requirement.</li>
+      <li><strong style="color:var(--text);font-weight:500">Drivers (N)</strong> — total policyholders. Larger portfolios produce tighter, more bell-shaped distributions.</li>
+      <li><strong style="color:var(--text);font-weight:500">P(claim)</strong> — annual claim probability per driver. At 5%, ~500 of 10,000 drivers file claims.</li>
+      <li><strong style="color:var(--text);font-weight:500">Min / Max Severity</strong> — bounds of the Uniform claim cost distribution.</li>
+      <li><strong style="color:var(--text);font-weight:500">Premium Loading</strong> — markup above expected losses to cover expenses and profit.</li>
     </ul>
-
-    <h3>PREMIUM CALCULATOR</h3>
-    <p>
-      Once the simulation runs, the tool applies the loading factor to derive two pricing outputs.
-      <strong style="color:var(--text)">Premium per driver</strong> is the annual rate each policyholder would be charged:
-      (E[S] / N) × (1 + loading). <strong style="color:var(--text)">Total premium pool</strong> is the aggregate revenue
-      collected across the portfolio: E[S] × (1 + loading). Together these show whether the
-      premium structure is sufficient to cover both expected losses and the solvency reserve —
-      the central question in actuarial rate-setting.
-    </p>
   </div>
 
-  <div class="main" id="simPanel">
+  <!-- ── Triangle panel ── -->
+  <div class="triangle-panel" id="trianglePanel">
+    <div class="triangle-col">
+      <div>
+        <div class="section-label" style="margin-bottom: 12px;">Loss Development Triangle</div>
+        <div class="tri-legend">
+          <div class="tri-legend-item"><div class="tri-dot known"></div> Known paid losses</div>
+          <div class="tri-legend-item"><div class="tri-dot diagonal"></div> Latest diagonal</div>
+          <div class="tri-legend-item"><div class="tri-dot projected"></div> Chain-ladder projected</div>
+        </div>
+      </div>
+      <div id="tri-table-container"></div>
+      <div>
+        <div class="section-label" style="margin-bottom: 12px;">IBNR Reserve by Accident Year</div>
+        <div id="ibnr-table-container"></div>
+      </div>
+    </div>
 
-    <!-- Chart column -->
+    <div class="controls-col">
+      <div class="section-label">Parameters</div>
+      <div class="slider-group">
+        <div class="slider-row">
+          <span class="param-name">Accident Years</span>
+          <span class="param-val" id="tri-val-years">5</span>
+        </div>
+        <input type="range" id="tri-sl-years" min="3" max="7" step="1" value="5">
+        <div class="slider-bounds"><span>3</span><span>7</span></div>
+      </div>
+      <div class="slider-group">
+        <div class="slider-row">
+          <span class="param-name">Base Annual Loss</span>
+          <span class="param-val" id="tri-val-base">$2.0M</span>
+        </div>
+        <input type="range" id="tri-sl-base" min="500" max="5000" step="100" value="2000">
+        <div class="slider-bounds"><span>$500K</span><span>$5M</span></div>
+      </div>
+      <div class="slider-group">
+        <div class="slider-row" style="margin-bottom: 6px;">
+          <span class="param-name">Dev Pattern</span>
+        </div>
+        <select id="tri-sel-pattern" class="tri-select">
+          <option value="conservative">Conservative (slow)</option>
+          <option value="moderate" selected>Moderate (auto)</option>
+          <option value="volatile">Volatile (fast)</option>
+        </select>
+      </div>
+      <div class="slider-group">
+        <div class="slider-row">
+          <span class="param-name">Volatility</span>
+          <span class="param-val" id="tri-val-vol">Medium</span>
+        </div>
+        <input type="range" id="tri-sl-vol" min="0" max="2" step="1" value="1">
+        <div class="slider-bounds"><span>Low</span><span>High</span></div>
+      </div>
+      <div class="confidence-note">
+        Factors estimated from <span>known cells only</span>. Oldest accident year assumed fully developed.
+      </div>
+      <button class="run-btn" id="triBtn" onclick="generateAndRenderTriangle()">Generate Triangle</button>
+    </div>
+  </div>
+
+  <!-- ── Simulator panel ── -->
+  <div class="main" id="simPanel">
     <div class="chart-col">
-      <div class="section-label">AGGREGATE LOSS DISTRIBUTION</div>
+      <div class="section-label">Aggregate Loss Distribution</div>
       <canvas id="chartCanvas"></canvas>
       <div class="legend">
         <div class="legend-item"><div class="legend-line normal"></div> CLT Normal approx.</div>
@@ -440,11 +638,11 @@
       </div>
       <div class="kpis">
         <div class="kpi">
-          <div class="kpi-label">E[S]</div>
+          <div class="kpi-label">Expected Loss E[S]</div>
           <div class="kpi-value" id="kpi-es">—</div>
         </div>
         <div class="kpi">
-          <div class="kpi-label">Std[S]</div>
+          <div class="kpi-label">Std Dev Std[S]</div>
           <div class="kpi-value" id="kpi-std">—</div>
         </div>
         <div class="kpi red">
@@ -456,14 +654,14 @@
           <div class="kpi-value" id="kpi-emp">—</div>
         </div>
         <div class="kpi yellow">
-          <div class="kpi-label">P(covered)</div>
+          <div class="kpi-label">P(Covered)</div>
           <div class="kpi-value" id="kpi-pcov">—</div>
         </div>
       </div>
-      <div class="pricing-label">PRICING</div>
+      <div class="pricing-label">Pricing</div>
       <div class="pricing-row">
         <div class="kpi orange">
-          <div class="kpi-label">Loading %</div>
+          <div class="kpi-label">Loading</div>
           <div class="kpi-value" id="kpi-loading">20.0%</div>
         </div>
         <div class="kpi orange">
@@ -477,10 +675,8 @@
       </div>
     </div>
 
-    <!-- Controls column -->
     <div class="controls-col">
-      <div class="section-label">PARAMETERS</div>
-
+      <div class="section-label">Parameters</div>
       <div class="slider-group">
         <div class="slider-row">
           <span class="param-name">Drivers (N)</span>
@@ -489,7 +685,6 @@
         <input type="range" id="sl-n" min="1000" max="50000" step="1000" value="10000">
         <div class="slider-bounds"><span>1,000</span><span>50,000</span></div>
       </div>
-
       <div class="slider-group">
         <div class="slider-row">
           <span class="param-name">P(claim)</span>
@@ -498,7 +693,6 @@
         <input type="range" id="sl-p" min="1" max="20" step="1" value="5">
         <div class="slider-bounds"><span>1%</span><span>20%</span></div>
       </div>
-
       <div class="slider-group">
         <div class="slider-row">
           <span class="param-name">Min Severity</span>
@@ -507,7 +701,6 @@
         <input type="range" id="sl-smin" min="500" max="10000" step="500" value="1000">
         <div class="slider-bounds"><span>$500</span><span>$10K</span></div>
       </div>
-
       <div class="slider-group">
         <div class="slider-row">
           <span class="param-name">Max Severity</span>
@@ -516,7 +709,6 @@
         <input type="range" id="sl-smax" min="1000" max="50000" step="1000" value="5000">
         <div class="slider-bounds"><span>$1K</span><span>$50K</span></div>
       </div>
-
       <div class="slider-group">
         <div class="slider-row">
           <span class="param-name">Simulations</span>
@@ -525,30 +717,26 @@
         <input type="range" id="sl-sims" min="1000" max="50000" step="1000" value="10000">
         <div class="slider-bounds"><span>1,000</span><span>50,000</span></div>
       </div>
-
       <div class="confidence-note">
         Confidence level: <span>95%</span> (fixed)
       </div>
-
       <div class="slider-group">
         <div class="slider-row">
           <span class="param-name" style="color:var(--orange)">Premium Loading</span>
           <span class="param-val" id="val-loading" style="color:var(--orange)">20%</span>
         </div>
-        <input type="range" id="sl-loading" min="0" max="50" step="1" value="20"
-               style="background:var(--border)">
+        <input type="range" id="sl-loading" min="0" max="50" step="1" value="20">
         <div class="slider-bounds"><span>0%</span><span>50%</span></div>
       </div>
-
-      <button id="runBtn">▶ RUN SIMULATION</button>
+      <button class="run-btn" id="runBtn">Run Simulation</button>
     </div>
   </div>
 
-  <!-- Theory accordion -->
-  <div class="theory">
+  <!-- ── Theory accordions ── -->
+  <div class="theory" id="theorySection">
     <div class="theory-toggle" id="theoryToggle">
-      <span class="arrow" id="theoryArrow">▶</span>
-      HOW IT WORKS — Compound Binomial–Uniform Model
+      <span id="theoryArrow">▸</span>
+      How It Works — Compound Binomial–Uniform Model
       <span class="hint">click to expand</span>
     </div>
     <div class="theory-body" id="theoryBody">
@@ -573,324 +761,213 @@
     </div>
   </div>
 
+  <div class="theory" id="chainTheorySection" style="display:none;">
+    <div class="theory-toggle" id="chainTheoryToggle">
+      <span id="chainTheoryArrow">▸</span>
+      How It Works — Chain-Ladder Method
+      <span class="hint">click to expand</span>
+    </div>
+    <div class="theory-body" id="chainTheoryBody">
+      <div class="theory-card">
+        <h4>Loss Development Triangle</h4>
+        Rows = accident years. Columns = development periods.<br><br>
+        Cell [i, j] = cumulative paid losses for accident year i at development period j.<br><br>
+        Upper-left = observed data. Lower-right = unknown IBNR.
+      </div>
+      <div class="theory-card">
+        <h4>Development Factors</h4>
+        <code>f_j = Σ C[i, j+1] / Σ C[i, j]</code><br><br>
+        Summed over rows where both periods are known.<br><br>
+        Weighted average captures historical loss development patterns.
+      </div>
+      <div class="theory-card">
+        <h4>IBNR Projection</h4>
+        <code>C[i, j] = C[i, j−1] × f_{j−1}</code><br><br>
+        <code>IBNR_i = C[i, ult] − C[i, latest]</code><br><br>
+        Total IBNR = reserve the insurer must hold for unreported losses.
+      </div>
+    </div>
+  </div>
+
   <script>
-    // ── Helpers ──────────────────────────────────────────────
     function fmtM(v) {
-      if (v >= 1e6)  return `$${(v / 1e6).toFixed(2)}M`;
-      if (v >= 1e3)  return `$${(v / 1e3).toFixed(1)}K`;
+      if (v >= 1e6) return `$${(v/1e6).toFixed(2)}M`;
+      if (v >= 1e3) return `$${(v/1e3).toFixed(1)}K`;
       return `$${v.toFixed(0)}`;
     }
-    function fmtPct(v) { return `${(v * 100).toFixed(2)}%`; }
+    function fmtPct(v) { return `${(v*100).toFixed(2)}%`; }
 
-    // ── Simulation engine ─────────────────────────────────────
     function simulate({ n, p, sevMin, sevMax, nSims }) {
-      // Theoretical moments
-      const E_N   = n * p;
-      const Var_N = n * p * (1 - p);
-      const E_X   = (sevMin + sevMax) / 2;
-      const Var_X = Math.pow(sevMax - sevMin, 2) / 12;
-      const E_S   = E_N * E_X;
-      const Var_S = E_N * Var_X + Var_N * Math.pow(E_X, 2);
+      const E_N = n*p, Var_N = n*p*(1-p);
+      const E_X = (sevMin+sevMax)/2, Var_X = Math.pow(sevMax-sevMin,2)/12;
+      const E_S = E_N*E_X;
+      const Var_S = E_N*Var_X + Var_N*Math.pow(E_X,2);
       const Std_S = Math.sqrt(Var_S);
-      const Z95   = 1.6449;
-      const cltReserve = E_S + Z95 * Std_S;
-
-      // Monte Carlo
-      // Box-Muller: generate standard normal variate
-      function randNormal() {
-        let u, v;
-        do { u = Math.random(); v = Math.random(); } while (u === 0);
-        return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
-      }
-
+      const cltReserve = E_S + 1.6449*Std_S;
+      function rn() { let u,v; do{u=Math.random();v=Math.random();}while(!u); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
       const losses = new Float64Array(nSims);
-      const USE_NORMAL_APPROX = n >= 1000; // CLT valid when n*p >= 10
-      for (let s = 0; s < nSims; s++) {
-        // Draw claim count: exact Binomial for small n, Normal approx for large n
-        let nClaims;
-        if (USE_NORMAL_APPROX) {
-          nClaims = Math.max(0, Math.round(E_N + randNormal() * Math.sqrt(Var_N)));
-        } else {
-          nClaims = 0;
-          for (let i = 0; i < n; i++) {
-            if (Math.random() < p) nClaims++;
-          }
-        }
-        let agg = 0;
-        for (let c = 0; c < nClaims; c++) {
-          agg += sevMin + Math.random() * (sevMax - sevMin);
-        }
-        losses[s] = agg;
+      for (let s=0; s<nSims; s++) {
+        const nc = n>=1000 ? Math.max(0,Math.round(E_N+rn()*Math.sqrt(Var_N))) : (()=>{let c=0;for(let i=0;i<n;i++)if(Math.random()<p)c++;return c;})();
+        let agg=0; for(let c=0;c<nc;c++) agg+=sevMin+Math.random()*(sevMax-sevMin);
+        losses[s]=agg;
       }
-
-      // Empirical 95th percentile
       const sorted = Float64Array.from(losses).sort();
-      // nearest-rank 95th pct: sorted[9500] means 9500/10000 values lie below → correct for large nSims
-      const empIdx = Math.floor(0.95 * nSims);
-      const empReserve = sorted[empIdx];
-
-      // Simulation stats
-      let sum = 0;
-      for (let s = 0; s < nSims; s++) sum += losses[s];
-      const simMean = sum / nSims;
-
-      let sqDiff = 0;
-      for (let s = 0; s < nSims; s++) sqDiff += Math.pow(losses[s] - simMean, 2);
-      const simStd = nSims > 1 ? Math.sqrt(sqDiff / (nSims - 1)) : 0;
-
-      let covered = 0;
-      for (let s = 0; s < nSims; s++) if (losses[s] <= cltReserve) covered++;
-      const probCovered = covered / nSims;
-
-      return {
-        losses, sorted,
-        E_S, Std_S, cltReserve,
-        empReserve, simMean, simStd, probCovered,
-      };
+      const empReserve = sorted[Math.floor(0.95*nSims)];
+      let covered=0; for(let s=0;s<nSims;s++) if(losses[s]<=cltReserve) covered++;
+      return { losses, E_S, Std_S, cltReserve, empReserve, probCovered: covered/nSims };
     }
 
-    // ── Normal PDF ────────────────────────────────────────────
-    function normalPDF(x, mu, sigma) {
-      return (1 / (sigma * Math.sqrt(2 * Math.PI))) *
-        Math.exp(-0.5 * Math.pow((x - mu) / sigma, 2));
-    }
+    function normalPDF(x,mu,s) { return Math.exp(-0.5*Math.pow((x-mu)/s,2))/(s*Math.sqrt(2*Math.PI)); }
 
-    // ── Chart renderer ────────────────────────────────────────
     function renderChart(canvas, result) {
       const { losses, E_S, Std_S, cltReserve, empReserve } = result;
       const nSims = losses.length;
-
-      // Set canvas pixel resolution to match display size
-      const dpr = window.devicePixelRatio || 1;
-      const W = canvas.clientWidth;
-      const H = canvas.clientHeight;
-      canvas.width  = W * dpr;
-      canvas.height = H * dpr;
-      const ctx = canvas.getContext('2d');
-      ctx.scale(dpr, dpr);
-
-      const PAD = { top: 16, right: 20, bottom: 32, left: 16 };
-      const cw = W - PAD.left - PAD.right;
-      const ch = H - PAD.top - PAD.bottom;
-
-      // ── Bucket losses into bins ───────────────────────────
-      const BINS = 60;
-      let minL = Infinity, maxL = -Infinity;
-      for (let s = 0; s < losses.length; s++) {
-        if (losses[s] < minL) minL = losses[s];
-        if (losses[s] > maxL) maxL = losses[s];
+      const dpr = window.devicePixelRatio||1;
+      const W=canvas.clientWidth, H=canvas.clientHeight;
+      canvas.width=W*dpr; canvas.height=H*dpr;
+      const ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
+      const PAD={top:14,right:16,bottom:30,left:16};
+      const cw=W-PAD.left-PAD.right, ch=H-PAD.top-PAD.bottom;
+      const BINS=60;
+      let minL=Infinity,maxL=-Infinity;
+      for(let s=0;s<losses.length;s++){if(losses[s]<minL)minL=losses[s];if(losses[s]>maxL)maxL=losses[s];}
+      const binW=maxL>minL?(maxL-minL)/BINS:1;
+      const counts=new Array(BINS).fill(0);
+      for(let s=0;s<nSims;s++) counts[Math.min(Math.floor((losses[s]-minL)/binW),BINS-1)]++;
+      const maxCount=Math.max(...counts); if(!maxCount) return;
+      const barPx=cw/BINS;
+      for(let b=0;b<BINS;b++){
+        const bh=(counts[b]/maxCount)*ch;
+        const x=PAD.left+b*barPx, y=PAD.top+ch-bh;
+        const g=ctx.createLinearGradient(0,y,0,PAD.top+ch);
+        g.addColorStop(0,'rgba(27,58,107,0.18)');
+        g.addColorStop(1,'rgba(27,58,107,0.02)');
+        ctx.fillStyle=g; ctx.fillRect(x+0.5,y,barPx-1,bh);
       }
-      const binW = maxL > minL ? (maxL - minL) / BINS : 1;
-      const counts = new Array(BINS).fill(0);
-      for (let s = 0; s < nSims; s++) {
-        const b = Math.min(Math.floor((losses[s] - minL) / binW), BINS - 1);
-        counts[b]++;
-      }
-      const maxCount = Math.max(...counts);
-      if (maxCount === 0) return;
-
-      // ── Draw histogram bars ───────────────────────────────
-      const barW = cw / BINS;
-      for (let b = 0; b < BINS; b++) {
-        const barH = (counts[b] / maxCount) * ch;
-        const x = PAD.left + b * barW;
-        const y = PAD.top + ch - barH;
-
-        // Purple gradient per bar
-        const grad = ctx.createLinearGradient(0, y, 0, PAD.top + ch);
-        grad.addColorStop(0, '#c4a8e8');
-        grad.addColorStop(1, '#533483');
-        ctx.fillStyle = grad;
-        ctx.fillRect(x + 0.5, y, barW - 1, barH);
-      }
-
-      // ── Normal curve overlay ──────────────────────────────
-      // Scale: find peak PDF and map to maxCount/nSims*binW density
-      const pdfScale = (maxCount / nSims) / binW;
-      ctx.beginPath();
-      ctx.strokeStyle = '#f6c90e';
-      ctx.lineWidth = 2;
-      const STEPS = 300;
-      for (let i = 0; i <= STEPS; i++) {
-        const lossVal = minL + (maxL - minL) * (i / STEPS);
-        const pdf = normalPDF(lossVal, E_S, Std_S);
-        const px = PAD.left + ((lossVal - minL) / (maxL - minL)) * cw;
-        const py = PAD.top + ch - (pdf / pdfScale) * ch;
-        i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+      const pdfScale=(maxCount/nSims)/binW;
+      ctx.beginPath(); ctx.strokeStyle='rgba(26,23,20,0.35)'; ctx.lineWidth=1.5;
+      for(let i=0;i<=300;i++){
+        const lv=minL+(maxL-minL)*(i/300);
+        const px=PAD.left+((lv-minL)/(maxL-minL))*cw;
+        const py=PAD.top+ch-(normalPDF(lv,E_S,Std_S)/pdfScale)*ch;
+        i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
       }
       ctx.stroke();
-
-      // ── Reserve lines ─────────────────────────────────────
-      function drawVLine(val, color) {
-        if (val < minL || val > maxL) return;
-        const px = PAD.left + ((val - minL) / (maxL - minL)) * cw;
-        ctx.beginPath();
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 2;
-        ctx.setLineDash([6, 4]);
-        ctx.moveTo(px, PAD.top);
-        ctx.lineTo(px, PAD.top + ch);
-        ctx.stroke();
-        ctx.setLineDash([]);
+      function vline(val,color){
+        if(val<minL||val>maxL)return;
+        const px=PAD.left+((val-minL)/(maxL-minL))*cw;
+        ctx.beginPath(); ctx.strokeStyle=color; ctx.lineWidth=1.5;
+        ctx.setLineDash([5,4]); ctx.moveTo(px,PAD.top); ctx.lineTo(px,PAD.top+ch);
+        ctx.stroke(); ctx.setLineDash([]);
       }
-      drawVLine(cltReserve, '#e84855');
-      drawVLine(empReserve, '#2dc653');
-
-      // ── X-axis labels ─────────────────────────────────────
-      ctx.fillStyle = '#64748b';
-      ctx.font = `${10}px system-ui`;
-      ctx.textAlign = 'center';
-      const TICKS = 5;
-      for (let t = 0; t <= TICKS; t++) {
-        const lossVal = minL + (maxL - minL) * (t / TICKS);
-        const px = PAD.left + (t / TICKS) * cw;
-        ctx.fillText(fmtM(lossVal), px, PAD.top + ch + 18);
+      vline(cltReserve,'#c0394a'); vline(empReserve,'#2a8c52');
+      ctx.fillStyle='#b8b0a6'; ctx.font=`10px 'DM Mono',monospace`; ctx.textAlign='center';
+      for(let t=0;t<=5;t++){
+        const lv=minL+(maxL-minL)*(t/5);
+        ctx.fillText(fmtM(lv),PAD.left+(t/5)*cw,PAD.top+ch+20);
       }
     }
 
-    // ── Slider live labels ────────────────────────────────────
-    function getParams() {
-      const n      = parseInt(document.getElementById('sl-n').value);
-      const pPct   = parseInt(document.getElementById('sl-p').value);
-      const sevMin = parseInt(document.getElementById('sl-smin').value);
-      const sevMax = parseInt(document.getElementById('sl-smax').value);
-      const nSims  = parseInt(document.getElementById('sl-sims').value);
-      return { n, p: pPct / 100, sevMin, sevMax, nSims };
+    function getParams(){return{n:parseInt(document.getElementById('sl-n').value),p:parseInt(document.getElementById('sl-p').value)/100,sevMin:parseInt(document.getElementById('sl-smin').value),sevMax:parseInt(document.getElementById('sl-smax').value),nSims:parseInt(document.getElementById('sl-sims').value)};}
+    function updateLabels(){const{n,p,sevMin,sevMax,nSims}=getParams();document.getElementById('val-n').textContent=n.toLocaleString();document.getElementById('val-p').textContent=`${(p*100).toFixed(1)}%`;document.getElementById('val-smin').textContent=`$${sevMin.toLocaleString()}`;document.getElementById('val-smax').textContent=`$${sevMax.toLocaleString()}`;document.getElementById('val-sims').textContent=nSims.toLocaleString();}
+    document.getElementById('sl-smin').addEventListener('input',()=>{const a=document.getElementById('sl-smin'),b=document.getElementById('sl-smax');if(parseInt(a.value)>=parseInt(b.value))a.value=parseInt(b.value)-500;updateLabels();});
+    document.getElementById('sl-smax').addEventListener('input',()=>{const a=document.getElementById('sl-smin'),b=document.getElementById('sl-smax');if(parseInt(b.value)<=parseInt(a.value))b.value=parseInt(a.value)+1000;updateLabels();});
+    ['sl-n','sl-p','sl-sims'].forEach(id=>document.getElementById(id).addEventListener('input',updateLabels));
+
+    function updateKPIs(r){document.getElementById('kpi-es').textContent=fmtM(r.E_S);document.getElementById('kpi-std').textContent=fmtM(r.Std_S);document.getElementById('kpi-clt').textContent=fmtM(r.cltReserve);document.getElementById('kpi-emp').textContent=fmtM(r.empReserve);document.getElementById('kpi-pcov').textContent=fmtPct(r.probCovered);updatePricing(r.E_S,parseInt(document.getElementById('sl-n').value));}
+    function updatePricing(E_S,n){const l=parseInt(document.getElementById('sl-loading').value)/100;document.getElementById('val-loading').textContent=`${(l*100).toFixed(0)}%`;document.getElementById('kpi-loading').textContent=fmtPct(l);if(!E_S||!n)return;document.getElementById('kpi-premium').textContent=fmtM(E_S*(1+l)/n);document.getElementById('kpi-pool').textContent=fmtM(E_S*(1+l));}
+    document.getElementById('sl-loading').addEventListener('input',()=>{if(lastResult)updatePricing(lastResult.E_S,parseInt(document.getElementById('sl-n').value));else{const l=parseInt(document.getElementById('sl-loading').value);document.getElementById('val-loading').textContent=`${l}%`;document.getElementById('kpi-loading').textContent=`${l}.00%`;}});
+
+    let lastResult=null;
+    function runSimulation(){const btn=document.getElementById('runBtn');btn.disabled=true;btn.textContent='Running…';setTimeout(()=>{const r=simulate(getParams());lastResult=r;renderChart(document.getElementById('chartCanvas'),r);updateKPIs(r);btn.disabled=false;btn.textContent='Run Simulation';},20);}
+    document.getElementById('runBtn').addEventListener('click',runSimulation);
+
+    function accordion(toggleId,bodyId,arrowId){
+      document.getElementById(toggleId).addEventListener('click',()=>{
+        const body=document.getElementById(bodyId),open=body.classList.toggle('open');
+        document.getElementById(arrowId).textContent=open?'▾':'▸';
+        document.querySelector(`#${toggleId} .hint`).textContent=open?'click to collapse':'click to expand';
+      });
+    }
+    accordion('theoryToggle','theoryBody','theoryArrow');
+    accordion('chainTheoryToggle','chainTheoryBody','chainTheoryArrow');
+
+    let resizeTimer=null;
+    window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{if(lastResult)renderChart(document.getElementById('chartCanvas'),lastResult);},100);});
+
+    function switchTab(tab){
+      ['simPanel','theorySection','chainTheorySection'].forEach(id=>document.getElementById(id).style.display='none');
+      document.getElementById('aboutPanel').classList.remove('visible');
+      document.getElementById('trianglePanel').classList.remove('visible');
+      ['tab-sim','tab-about','tab-triangle'].forEach(id=>document.getElementById(id).classList.remove('active'));
+      if(tab==='sim'){document.getElementById('simPanel').style.display='';document.getElementById('theorySection').style.display='';document.getElementById('tab-sim').classList.add('active');}
+      else if(tab==='about'){document.getElementById('aboutPanel').classList.add('visible');document.getElementById('tab-about').classList.add('active');}
+      else if(tab==='triangle'){document.getElementById('trianglePanel').classList.add('visible');document.getElementById('chainTheorySection').style.display='';document.getElementById('tab-triangle').classList.add('active');}
     }
 
-    function updateLabels() {
-      const { n, p, sevMin, sevMax, nSims } = getParams();
-      document.getElementById('val-n').textContent    = n.toLocaleString();
-      document.getElementById('val-p').textContent    = `${(p * 100).toFixed(1)}%`;
-      document.getElementById('val-smin').textContent = `$${sevMin.toLocaleString()}`;
-      document.getElementById('val-smax').textContent = `$${sevMax.toLocaleString()}`;
-      document.getElementById('val-sims').textContent = nSims.toLocaleString();
-    }
+    const DEV_PATTERNS={conservative:[1.70,1.12,1.04,1.015,1.006,1.002],moderate:[2.50,1.25,1.08,1.030,1.010,1.003],volatile:[3.50,1.50,1.15,1.060,1.020,1.008]};
+    const VOL_LABELS=['Low','Medium','High'],VOL_NOISE=[0.02,0.07,0.15];
+    document.getElementById('tri-sl-years').addEventListener('input',()=>{document.getElementById('tri-val-years').textContent=document.getElementById('tri-sl-years').value;});
+    document.getElementById('tri-sl-base').addEventListener('input',()=>{const v=parseInt(document.getElementById('tri-sl-base').value);document.getElementById('tri-val-base').textContent=v>=1000?`$${(v/1000).toFixed(1)}M`:`$${v}K`;});
+    document.getElementById('tri-sl-vol').addEventListener('input',()=>{document.getElementById('tri-val-vol').textContent=VOL_LABELS[parseInt(document.getElementById('tri-sl-vol').value)];});
 
-    // Inversion guard: sevMin must stay below sevMax - 500
-    document.getElementById('sl-smin').addEventListener('input', () => {
-      const slMin = document.getElementById('sl-smin');
-      const slMax = document.getElementById('sl-smax');
-      if (parseInt(slMin.value) >= parseInt(slMax.value)) {
-        slMin.value = parseInt(slMax.value) - 500;
+    function generateTriangle(years,baseK,pattern,volLevel){
+      const factors=DEV_PATTERNS[pattern],noise=VOL_NOISE[volLevel],base=baseK*1000;
+      let cf=1; for(let k=0;k<years-1;k++) cf*=factors[Math.min(k,factors.length-1)];
+      const t=[];
+      for(let i=0;i<years;i++){
+        t[i]=[];
+        t[i][0]=base*(0.85+Math.random()*0.30)*(1+(Math.random()-0.5)*noise*2)/cf;
+        for(let j=1;j<years;j++) t[i][j]=t[i][j-1]*factors[Math.min(j-1,factors.length-1)]*(1+(Math.random()-0.5)*noise);
       }
-      updateLabels();
-    });
-    document.getElementById('sl-smax').addEventListener('input', () => {
-      const slMin = document.getElementById('sl-smin');
-      const slMax = document.getElementById('sl-smax');
-      if (parseInt(slMax.value) <= parseInt(slMin.value)) {
-        slMax.value = parseInt(slMin.value) + 1000;
-      }
-      updateLabels();
-    });
-    ['sl-n', 'sl-p', 'sl-sims'].forEach(id => {
-      document.getElementById(id).addEventListener('input', updateLabels);
-    });
-
-    // ── KPI updater ───────────────────────────────────────────
-    function updateKPIs(result) {
-      document.getElementById('kpi-es').textContent   = fmtM(result.E_S);
-      document.getElementById('kpi-std').textContent  = fmtM(result.Std_S);
-      document.getElementById('kpi-clt').textContent  = fmtM(result.cltReserve);
-      document.getElementById('kpi-emp').textContent  = fmtM(result.empReserve);
-      document.getElementById('kpi-pcov').textContent = fmtPct(result.probCovered);
-      updatePricing(result.E_S, result.losses.length > 0 ? parseInt(document.getElementById('sl-n').value) : 0);
+      return t;
     }
-
-    // ── Pricing calculator ────────────────────────────────────
-    function updatePricing(E_S, n) {
-      const loading = parseInt(document.getElementById('sl-loading').value) / 100;
-      document.getElementById('val-loading').textContent  = `${(loading * 100).toFixed(0)}%`;
-      document.getElementById('kpi-loading').textContent  = fmtPct(loading);
-      if (!E_S || !n) return;
-      const totalPremium    = E_S * (1 + loading);
-      const premiumPerDriver = totalPremium / n;
-      document.getElementById('kpi-premium').textContent = fmtM(premiumPerDriver);
-      document.getElementById('kpi-pool').textContent    = fmtM(totalPremium);
+    function chainLadder(triangle,years){
+      const factors=[];
+      for(let j=0;j<years-1;j++){let num=0,den=0;for(let i=0;i<years;i++){if(j<=years-1-i&&j+1<=years-1-i){num+=triangle[i][j+1];den+=triangle[i][j];}}factors[j]=den>0?num/den:1;}
+      const proj=triangle.map(r=>[...r]);
+      for(let i=1;i<years;i++){const lk=years-1-i;for(let j=lk+1;j<years;j++) proj[i][j]=proj[i][j-1]*factors[j-1];}
+      const ibnr=triangle.map((_,i)=>i===0?0:proj[i][years-1]-triangle[i][years-1-i]);
+      return{factors,projected:proj,ibnr,totalIBNR:ibnr.reduce((a,b)=>a+b,0)};
     }
-
-    document.getElementById('sl-loading').addEventListener('input', () => {
-      if (lastResult) {
-        const n = parseInt(document.getElementById('sl-n').value);
-        updatePricing(lastResult.E_S, n);
-      } else {
-        const loading = parseInt(document.getElementById('sl-loading').value);
-        document.getElementById('val-loading').textContent = `${loading}%`;
-        document.getElementById('kpi-loading').textContent = `${loading}.00%`;
-      }
-    });
-
-    // ── Run handler ───────────────────────────────────────────
-    let lastResult = null;
-
-    function runSimulation() {
-      const btn = document.getElementById('runBtn');
-      btn.disabled = true;
-      btn.textContent = '⏳ Running…';
-
-      // Yield to browser to paint spinner before blocking computation
-      setTimeout(() => {
-        const params = getParams();
-        const result = simulate(params);
-        lastResult = result;
-        const canvas = document.getElementById('chartCanvas');
-        renderChart(canvas, result);
-        updateKPIs(result);
-        btn.disabled = false;
-        btn.textContent = '▶ RUN SIMULATION';
-      }, 20);
-    }
-
-    document.getElementById('runBtn').addEventListener('click', runSimulation);
-
-    // ── Theory accordion ──────────────────────────────────────
-    document.getElementById('theoryToggle').addEventListener('click', () => {
-      const body  = document.getElementById('theoryBody');
-      const arrow = document.getElementById('theoryArrow');
-      const hint  = document.querySelector('.theory-toggle .hint');
-      const open  = body.classList.toggle('open');
-      arrow.textContent = open ? '▼' : '▶';
-      hint.textContent  = open ? 'click to collapse' : 'click to expand';
-    });
-
-    // ── Resize redraw ─────────────────────────────────────────
-    let resizeTimer = null;
-    window.addEventListener('resize', () => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(() => {
-        if (lastResult) {
-          renderChart(document.getElementById('chartCanvas'), lastResult);
+    function renderTriangleUI({triangle,projected,factors,ibnr,totalIBNR,years}){
+      const sy=new Date().getFullYear()-years+1;
+      let html='<table class="tri-table"><thead><tr><th>Accident Year</th>';
+      for(let j=0;j<years;j++) html+=`<th>Dev ${j+1}</th>`;
+      html+='</tr></thead><tbody>';
+      for(let i=0;i<years;i++){
+        const lk=years-1-i; html+=`<tr><td>AY ${sy+i}</td>`;
+        for(let j=0;j<years;j++){
+          if(j===lk) html+=`<td class="diagonal">${fmtM(triangle[i][j])}</td>`;
+          else if(j<lk) html+=`<td class="known">${fmtM(triangle[i][j])}</td>`;
+          else html+=`<td class="projected">${fmtM(projected[i][j])}</td>`;
         }
-      }, 100);
-    });
-
-    // ── Tab switching ─────────────────────────────────────────
-    function switchTab(tab) {
-      const simPanel   = document.getElementById('simPanel');
-      const aboutPanel = document.getElementById('aboutPanel');
-      const theory     = document.querySelector('.theory');
-      const tabSim     = document.getElementById('tab-sim');
-      const tabAbout   = document.getElementById('tab-about');
-
-      if (tab === 'sim') {
-        simPanel.style.display = '';
-        theory.style.display   = '';
-        aboutPanel.classList.remove('visible');
-        tabSim.classList.add('active');
-        tabAbout.classList.remove('active');
-      } else {
-        simPanel.style.display = 'none';
-        theory.style.display   = 'none';
-        aboutPanel.classList.add('visible');
-        tabSim.classList.remove('active');
-        tabAbout.classList.add('active');
+        html+='</tr>';
       }
+      html+='<tr class="factors-row"><td>Dev Factor</td><td style="color:var(--dim)">—</td>';
+      for(let j=0;j<years-1;j++) html+=`<td>${factors[j].toFixed(3)}×</td>`;
+      html+='</tr></tbody></table>';
+      document.getElementById('tri-table-container').innerHTML=html;
+      let ih='<table class="ibnr-table"><thead><tr><th>Accident Year</th><th>Reported (Latest)</th><th>Projected Ultimate</th><th>IBNR</th></tr></thead><tbody>';
+      for(let i=0;i<years;i++){
+        const lk=years-1-i,full=i===0;
+        ih+=`<tr><td>AY ${sy+i}${full?' <span style="color:var(--dim);font-size:8px;letter-spacing:1px">FULL</span>':''}</td><td style="color:var(--navy);font-weight:500">${fmtM(triangle[i][lk])}</td><td style="color:${full?'var(--text)':'var(--muted)'}">${fmtM(projected[i][years-1])}</td><td style="color:${full?'var(--dim)':'var(--orange)'};font-weight:${full?400:600}">${full?'—':fmtM(ibnr[i])}</td></tr>`;
+      }
+      ih+=`<tr class="total-row"><td>Total IBNR</td><td>—</td><td>—</td><td style="color:var(--orange);font-size:16px;font-weight:600">${fmtM(totalIBNR)}</td></tr></tbody></table>`;
+      document.getElementById('ibnr-table-container').innerHTML=ih;
+    }
+    function generateAndRenderTriangle(){
+      const btn=document.getElementById('triBtn');btn.disabled=true;btn.textContent='Generating…';
+      setTimeout(()=>{
+        const years=parseInt(document.getElementById('tri-sl-years').value),baseK=parseInt(document.getElementById('tri-sl-base').value),pattern=document.getElementById('tri-sel-pattern').value,volLevel=parseInt(document.getElementById('tri-sl-vol').value);
+        const triangle=generateTriangle(years,baseK,pattern,volLevel);
+        const cl=chainLadder(triangle,years);
+        renderTriangleUI({triangle,...cl,years});
+        btn.disabled=false;btn.textContent='Generate Triangle';
+      },20);
     }
 
-    // ── Auto-run on load ──────────────────────────────────────
-    updateLabels();
-    runSimulation();
+    updateLabels(); runSimulation(); generateAndRenderTriangle();
   </script>
 </body>
 </html>
