@@ -571,7 +571,7 @@
       <div>
         <div class="section-label" style="margin-bottom: 12px;">Loss Development Triangle</div>
         <div class="tri-legend">
-          <div class="tri-legend-item"><div class="tri-dot known"></div> Known paid losses</div>
+          <div class="tri-legend-item"><div class="tri-dot known"></div> Known reported losses</div>
           <div class="tri-legend-item"><div class="tri-dot diagonal"></div> Latest diagonal</div>
           <div class="tri-legend-item"><div class="tri-dot projected"></div> Chain-ladder projected</div>
         </div>
@@ -771,8 +771,9 @@
       <div class="theory-card">
         <h4>Loss Development Triangle</h4>
         Rows = accident years. Columns = development periods.<br><br>
-        Cell [i, j] = cumulative paid losses for accident year i at development period j.<br><br>
-        Upper-left = observed data. Lower-right = unknown IBNR.
+        Cell [i, j] = cumulative reported (incurred) losses for accident year i at development period j.<br><br>
+        Upper-left = observed data. Lower-right = unknown IBNR.<br><br>
+        Triangle values here are simulated from an assumed development pattern plus random noise, not real loss data.
       </div>
       <div class="theory-card">
         <h4>Development Factors</h4>
@@ -784,7 +785,7 @@
         <h4>IBNR Projection</h4>
         <code>C[i, j] = C[i, j−1] × f_{j−1}</code><br><br>
         <code>IBNR_i = C[i, ult] − C[i, latest]</code><br><br>
-        Total IBNR = reserve the insurer must hold for unreported losses.
+        Total IBNR = reserve the insurer must hold for losses not yet reported, including further development on known claims.
       </div>
     </div>
   </div>
@@ -804,10 +805,27 @@
       const Var_S = E_N*Var_X + Var_N*Math.pow(E_X,2);
       const Std_S = Math.sqrt(Var_S);
       const cltReserve = E_S + 1.6449*Std_S;
-      function rn() { let u,v; do{u=Math.random();v=Math.random();}while(!u); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+      // Binomial(n, p) claim counts by inverse-CDF sampling: build the pmf outward from the
+      // mode with the recurrence P(k+1) = P(k) * (n-k)/(k+1) * p/(1-p), normalise, then
+      // binary-search the CDF for each uniform draw. No Normal approximation is used.
+      const mode = Math.min(n, Math.floor((n+1)*p)), odds = p/(1-p);
+      const span = Math.ceil(12*Math.sqrt(Var_N))+30;
+      const kLo = Math.max(0, mode-span), kHi = Math.min(n, mode+span);
+      const pmf = new Float64Array(kHi-kLo+1);
+      pmf[mode-kLo] = 1;
+      for (let k=mode; k<kHi; k++) pmf[k+1-kLo] = pmf[k-kLo]*(n-k)/(k+1)*odds;
+      for (let k=mode; k>kLo; k--) pmf[k-1-kLo] = pmf[k-kLo]*k/(n-k+1)/odds;
+      let tot=0; for (let i=0;i<pmf.length;i++) tot+=pmf[i];
+      const cdf = new Float64Array(pmf.length);
+      let acc=0; for (let i=0;i<pmf.length;i++) { acc+=pmf[i]/tot; cdf[i]=acc; }
+      function binomial() {
+        const u=Math.random(); let lo=0, hi=cdf.length-1;
+        while (lo<hi) { const mid=(lo+hi)>>1; if (cdf[mid]<u) lo=mid+1; else hi=mid; }
+        return kLo+lo;
+      }
       const losses = new Float64Array(nSims);
       for (let s=0; s<nSims; s++) {
-        const nc = n>=1000 ? Math.max(0,Math.round(E_N+rn()*Math.sqrt(Var_N))) : (()=>{let c=0;for(let i=0;i<n;i++)if(Math.random()<p)c++;return c;})();
+        const nc = binomial();
         let agg=0; for(let c=0;c<nc;c++) agg+=sevMin+Math.random()*(sevMax-sevMin);
         losses[s]=agg;
       }
